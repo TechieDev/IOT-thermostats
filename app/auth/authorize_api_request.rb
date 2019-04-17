@@ -18,6 +18,12 @@ class AuthorizeApiRequest
     # check if thermostat is in the database
     # memoize thermostat object
     @thermostat ||= Thermostat.find_by(household_token: decoded_auth_token[:household_token]) if decoded_auth_token
+    # handle thermostat not found
+    if @thermostat.nil?
+      raise( ExceptionHandler::InvalidToken, ("#{Message.invalid_token}") ) 
+    else
+      @thermostat
+    end
   end
 
   # decode authentication token
