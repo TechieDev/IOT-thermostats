@@ -10,4 +10,11 @@ RSpec.describe Thermostat, type: :model do
   	thermostat.save
   	expect(Thermostat.first).to eq(thermostat)
    end
+
+   it " has many readings " do
+    thermostat = create(:thermostat) 
+  	reading1 = create(:reading, thermostat_id: thermostat.id) 
+  	reading2 = create(:reading, thermostat_id: thermostat.id) 
+    expect(thermostat.readings).to include(reading1, reading2)
+  end
 end
