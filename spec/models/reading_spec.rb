@@ -15,8 +15,6 @@ RSpec.describe Reading, type: :model do
   it { should validate_numericality_of(:humidity) }
   it { should validate_numericality_of(:battery_charge) }
 
-  # validate uniqueness
-  it { should validate_uniqueness_of(:seq_number) }
 
 
   describe '#Validations' do
