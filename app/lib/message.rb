@@ -26,4 +26,8 @@ class Message
   def self.expired_token
     'Sorry, your token has expired.'
   end
+
+  def self.forbidden
+    'Forbidden'
+  end
 end

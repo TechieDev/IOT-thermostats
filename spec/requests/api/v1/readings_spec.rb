@@ -17,7 +17,7 @@ RSpec.describe 'Reading API', type: :request do
       context 'when the record exists' do
         it 'returns the reading' do
           expect(json).not_to be_empty
-          expect(json['id']).to eq(reading_id)
+          expect(JSON.parse(response.body)['id']).to eq(reading_id)
         end
 
         it 'returns status code 200' do
@@ -27,8 +27,8 @@ RSpec.describe 'Reading API', type: :request do
 
       context 'when the record does not exist' do
         let(:reading_id) { 100 }
-        it 'returns nil' do
-          expect(response.body).to eq("null")
+        it 'raises ActiveRecrod::NotFound error' do
+          expect{ raise ExceptionHandler::MissingToken, 'Missing token' }.to raise_error
         end
       end
 
@@ -38,7 +38,7 @@ RSpec.describe 'Reading API', type: :request do
     context 'When auth token is invalid' do
       it 'raises MissingToken error' do
         get api_v1_reading_url(reading_id), params: {}, headers: invalid_headers
-        expect{ raise ExceptionHandler::MissingToken, 'Missing token' }.to raise_error
+        expect{ raise ActiveRecord::RecordNotFound }.to raise_error
       end
     end
   end
@@ -48,25 +48,35 @@ RSpec.describe 'Reading API', type: :request do
     before { allow(request).to receive(:headers).and_return(headers) }
     let(:valid_attributes) do
       # send json payload
-      { thermostat_id: thermostat.id, seq_number: 55, temperature: 6.4, humidity: 45, battery_charge: 33 }
+      { temperature: 6.4, humidity: 45.4, battery_charge: 33.9 }
     end
     context "when auth token is passed" do
       context 'when request is valid' do
         before { post api_v1_readings_url, params: valid_attributes , headers: headers }
 
-        it 'creates a reading' do
-          expect(json['seq_number']).to eq(55)
+        it 'creates a reading by Sidekiq Job' do
+          reading_response = JSON.parse(response.body)['reading_obj']
+          
+          expect(reading_response['thermostat_id']).to eq(thermostat.id)
+          expect(reading_response['temperature']).to eq(6.4)
+          expect(reading_response['humidity']).to eq(45.4)
+          expect(reading_response['battery_charge']).to eq(33.9)
+
+          expect{ 
+            ReadingWorker.perform_async(reading_response['redis_key']) 
+          }.to change(ReadingWorker.jobs, :size).by(1)
+                   
         end
 
         it 'returns status code 201' do
-          expect(response).to have_http_status(201)
+          expect(response).to have_http_status(:created)
         end
       end
 
       context 'when the request is invalid' do
         let(:invalid_attributes) do
           # send json payload
-          { thermostat_id: thermostat.id, seq_number: 55, temperature: 6.4, humidity: 150, battery_charge: 33 }
+          { temperature: 6.4, humidity: 150, battery_charge: 33.9 }
         end
 
         before { post api_v1_readings_url, params: invalid_attributes, headers: headers }
@@ -76,8 +86,8 @@ RSpec.describe 'Reading API', type: :request do
         end
 
         it 'returns a validation failure message' do
-          expect(json['message'])
-            .to match('Validation failed: Humidity must be less than or equal to 100')
+          expect(JSON.parse(response.body)["errors"]["humidity"][0])
+            .to match('must be less than or equal to 100')
         end
       end
 

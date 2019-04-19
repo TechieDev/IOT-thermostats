@@ -1,4 +1,5 @@
 require 'rails_helper'
+require 'spec_helper'
 
 RSpec.describe Api::V1::ThermostatsController, :type => :request do
   describe 'GET generate_auth_token' do

@@ -8,6 +8,7 @@ module ExceptionHandler
   class MissingHouseholdToken < StandardError; end
   class InvalidToken < StandardError; end
   class InvalidHouseholdToken < StandardError; end
+  class NotAllowed < StandardError; end
 
   included do
     # Custom Handlers
@@ -17,6 +18,7 @@ module ExceptionHandler
     rescue_from ExceptionHandler::MissingHouseholdToken, with: :four_twenty_two
     rescue_from ExceptionHandler::InvalidToken, with: :four_twenty_two
     rescue_from ExceptionHandler::InvalidHouseholdToken, with: :four_twenty_two
+    rescue_from ExceptionHandler::NotAllowed, with: :four_hundred_three
 
     rescue_from ActiveRecord::RecordNotFound do |e|
       json_response({ message: e.message }, :not_found)
@@ -33,5 +35,10 @@ module ExceptionHandler
   # Status code 401
   def unauthorized_request(e)
     json_response({ message: e.message }, :unauthorized)
+  end
+
+  # Status code 403
+  def four_hundred_three(e)
+    json_response({ message: e.message }, :forbidden)
   end
 end
