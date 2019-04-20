@@ -8,6 +8,8 @@ class Reading::ReadingService
 
     @id, @seq_number = _get_data
 
+    @thermostat = Thermostat::ThermostatService.new(@thermostat_id).save_obj
+
     @reading = Reading::ReadingObj.new(
       id: @id,
       seq_number: @seq_number,
@@ -38,7 +40,20 @@ class Reading::ReadingService
 
   def after_save_obj_tasks
     key = @reading.redis_key
+    after_save_thermostat_update_task
     ReadingWorker.perform_async(key)
+  end
+
+  def after_save_thermostat_update_task
+    reading = @reading.reading_obj
+    Thermostat::ThermostatService.new(thermostat_id: @thermostat_id).
+      update(
+        thermostat: @thermostat,
+        battery_charge: reading.battery_charge,
+        humidity: reading.humidity,
+        temperature: reading.temperature,
+        seq_number: reading.seq_number
+      )
   end
 
 end

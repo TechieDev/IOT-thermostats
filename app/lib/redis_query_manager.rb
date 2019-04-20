@@ -32,7 +32,7 @@ module RedisQueryManager
   end
 
   def thermostat_redis_key(thermostat_id)
-    "thermostat_##{thermostat_id}"
+    "thermostat_#{thermostat_id}"
   end
 
   def reading_id_redis_key

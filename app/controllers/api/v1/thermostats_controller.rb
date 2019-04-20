@@ -20,6 +20,8 @@ module Api
 			end
 
 			def stats
+				avg_values = Thermostat::ThermostatService.new(thermostat_id: @current_thermostat.id).fetch
+				json_response(avg_values)
 			end
 		end
 	end
