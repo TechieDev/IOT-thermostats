@@ -7,8 +7,8 @@ module RedLock
     		reading_lock = redlock.lock!(@key, ttl) do
     			block.call
     		end
-    	rescue Redlock::LockError
-    		# execption
+    	rescue Redlock::LockError => e
+    		json_response({ errors: e.message})
     	end
   	end
 
