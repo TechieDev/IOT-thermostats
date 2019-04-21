@@ -1,6 +1,7 @@
 module Api
 	module V1
 		class ReadingsController < ApplicationController
+			include RedLock::LockManager
 			before_action :reading_buiilder, only: :create
 
 			def show
@@ -13,12 +14,15 @@ module Api
       end
 
 			def create
-				if @reading.save_obj
-					@reading_obj = @reading.reading 
-		    	json_response(@reading_obj, :created)
-		    else
-		    	json_response({ errors: @reading.reading.reading_obj.errors.messages }, :unprocessable_entity)
-		    end
+
+				lock(action: 'create_reading', object: @current_thermostat, ttl: 200000) do
+					if @reading.save_obj
+						@reading_obj = @reading.reading 
+			    	json_response(@reading_obj, :created)
+			    else
+			    	json_response({ errors: @reading.reading.reading_obj.errors.messages }, :unprocessable_entity)
+			    end
+        end
 		  end
 
 			private
