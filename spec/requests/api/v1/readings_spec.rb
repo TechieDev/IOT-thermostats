@@ -55,8 +55,7 @@ RSpec.describe 'Reading API', type: :request do
         before { post api_v1_readings_url, params: valid_attributes , headers: headers }
 
         it 'creates a reading by Sidekiq Job' do
-          reading_response = JSON.parse(response.body)['reading_obj']
-          
+          reading_response = JSON.parse(response.body)['reading']
           expect(reading_response['thermostat_id']).to eq(thermostat.id)
           expect(reading_response['temperature']).to eq(6.4)
           expect(reading_response['humidity']).to eq(45.4)

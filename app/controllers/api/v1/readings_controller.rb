@@ -17,8 +17,7 @@ module Api
 
 				lock(action: 'create_reading', object: @current_thermostat, ttl: 200000) do
 					if @reading.save_obj
-						@reading_obj = @reading.reading 
-			    	json_response(@reading_obj, :created)
+			    	json_response({reading: @reading.reading.reading_obj}, :created)
 			    else
 			    	json_response({ errors: @reading.reading.reading_obj.errors.messages }, :unprocessable_entity)
 			    end
